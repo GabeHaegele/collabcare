@@ -1,8 +1,10 @@
 <script lang="ts">
     import AuthCheck from "$lib/components/AuthCheck.svelte";
     import { db, user, userData } from "$lib/firebase";
-    import { doc, getDoc, writeBatch } from "firebase/firestore";
+    import { doc, getDoc, writeBatch, deleteField } from "firebase/firestore";
+    
 
+    let roles = ['app', 'physician']
     let role = "";
     let patients = ['Children', 'Adults', 'Elderly', 'Complex'];
     let selectedPatients = [];
@@ -10,12 +12,26 @@
     let procedure = "";
     let learning = "";
     let coverage = "";
+    let displayName = "";
 
     async function confirmRole() {
         console.log("whatdafuac", role);
         const batch = writeBatch(db);
-        batch.update(doc(db, "role", role), { uid: $user?.uid });
+        batch.set(doc(db, "role", role), { uid: $user?.uid });
+        if (role == roles[0]) {
+            batch.update(doc(db, "role", roles[1]), { uid: deleteField() });
+        } else {
+            batch.update(doc(db, "role", roles[0]), { uid: deleteField() });
+        }
         
+        batch.set(doc(db, "users", $user!.uid), {
+            role,
+            proximity,
+            procedure,
+            coverage,
+            learning,
+            displayName,
+        });
         await batch.commit();
     }
 
@@ -134,12 +150,12 @@
     <h2>I am...</h2>
 <div class="flex space-x-6">
     <div class="flex items-center pl-4 pr-4 border border-gray-200 hover:rounded hover:bg-blue-500 dark:border-gray-700">
-        <input on:input={confirmCoverage} bind:group={coverage} value="physician" id="coverage-radio-1" type="radio" name="coverage-radio" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+        <input on:input={confirmCoverage} bind:group={coverage} value="available" id="coverage-radio-1" type="radio" name="coverage-radio" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
         <label for="coverage-radio-1" class="w-full py-4 ml-2 text-sm font-medium">available for on-call coverage</label>
     </div>
     <div class="flex items-center pl-4 pr-4 border border-gray-200 hover:rounded hover:bg-blue-500 dark:border-gray-700">
-        <input on:input={confirmCoverage} bind:group={coverage} value="app" id="coverage-radio-2" type="radio" name="coverage-radio" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-        <label for="coverage-radio-2" class="w-full py-4 ml-2 text-sm font-medium">available for on-call coverage</label>
+        <input on:input={confirmCoverage} bind:group={coverage} value="unavailable" id="coverage-radio-2" type="radio" name="coverage-radio" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+        <label for="coverage-radio-2" class="w-full py-4 ml-2 text-sm font-medium">unavailable for on-call coverage</label>
     </div>
 </div>
 {/if}
