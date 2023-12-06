@@ -1,8 +1,10 @@
 <script lang="ts">
     import AuthCheck from "$lib/components/AuthCheck.svelte";
     import { db, user, userData } from "$lib/firebase";
-    import { doc, getDoc, writeBatch } from "firebase/firestore";
+    import { doc, getDoc, writeBatch, deleteDoc } from "firebase/firestore";
+    
 
+    let roles = ['app', 'physician']
     let role = "";
     // Legal Scope
     let patients = ['Children', 'Adults', 'Elderly', 'Complex'];
@@ -22,12 +24,26 @@
     let relationship = "";
     // On-call coverage
     let coverage = "";
+    let displayName = $user?.displayName;
 
     async function confirmRole() {
         console.log("whatdafuac", role);
         const batch = writeBatch(db);
-        batch.update(doc(db, "role", role), { uid: $user?.uid });
+        batch.set(doc(db, role, $user?.uid), {  });
+        if (role == roles[0]) {
+            batch.delete(doc(db, roles[1], $user?.uid));
+        } else {
+            batch.delete(doc(db, roles[0], $user?.uid));
+        }
         
+        batch.set(doc(db, "users", $user!.uid), {
+            role,
+            proximity,
+            procedure,
+            coverage,
+            learning,
+            displayName,
+        });
         await batch.commit();
     }
 
@@ -110,6 +126,7 @@
 
         await batch.commit();
     }
+    confirmRole();
 </script>
 
 <AuthCheck>

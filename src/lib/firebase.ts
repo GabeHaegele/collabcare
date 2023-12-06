@@ -25,7 +25,7 @@ export const app = initializeApp(firebaseConfig);
 export const db = getFirestore();
 export const auth = getAuth();
 export const storage = getStorage();
-
+export const writableArray = writable([]);
 
 /**
  * @returns a store with the current firebase user
@@ -86,11 +86,12 @@ export function docStore<T>(
 }
 
 interface UserData {
-  username: string;
-  bio: string;
-  photoURL: string;
-  published: boolean;
-  links: any[];
+  coverage: string;
+  learning: string;
+  procedure: string;
+  proximity: string;
+  role: string;
+  displayName: string;
 }
 
 export const userData: Readable<UserData | null> = derived(user, ($user, set) => { 
